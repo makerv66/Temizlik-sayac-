@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Akıllı Temizlik Takipçisi</title>
+    <style>
+        :root {
+            --bg-color: #f0f2f5;
+            --card-bg: #ffffff;
+            --primary: #4a90e2;
+            --secondary: #67c23a;
+            --text: #333;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text);
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--primary);
+            font-size: 24px;
+            margin-bottom: 25px;
+        }
+
+        .task-card {
+            border: 1px solid #eee;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: transform 0.2s;
+        }
+
+        .task-card:hover {
+            transform: scale(1.02);
+        }
+
+        .task-info h3 {
+            margin: 0;
+            font-size: 18px;
+        }
+
+        .task-info p {
+            margin: 5px 0 0;
+            font-size: 13px;
+            color: #777;
+        }
+
+        .timer {
+            font-weight: bold;
+            color: var(--primary);
+            display: block;
+            margin-top: 5px;
+        }
+
+        button {
+            background-color: var(--secondary);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background-color: #56ad32;
+        }
+
+        .category-tag {
+            font-size: 10px;
+            text-transform: uppercase;
+            background: #e1f0ff;
+            color: #4a90e2;
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-bottom: 5px;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🏠 Temizlik Takipçisi</h1>
+    <div id="app"></div>
+</div>
+
+<script>
+    // Temizlik görevleri listesi
+    const tasks = [
+        { id: 'supurme', name: 'Yerleri Süpürme', cat: 'Zemin' },
+        { id: 'mop', name: 'Paspas/Mop Yapma', cat: 'Zemin' },
+        { id: 'toz', name: 'Toz Alma', cat: 'Yüzeyler' },
+        { id: 'mutfak', name: 'Mutfak Detaylı Temizlik', cat: 'Mutfak' },
+        { id: 'banyo', name: 'Banyo/WC Dezenfekte', cat: 'Banyo' },
+        { id: 'carsaf', name: 'Çarşaf Değişimi', cat: 'Yatak Odası' }
+    ];
+
+    // Verileri tarayıcı hafızasından (localStorage) al
+    function getTaskData() {
+        const saved = localStorage.getItem('clean_app_data');
+        return saved ? JSON.parse(saved) : {};
+    }
+
+    // Ekranı güncelle
+    function render() {
+        const app = document.getElementById('app');
+        const data = getTaskData();
+        const now = new Date().getTime();
+
+        app.innerHTML = tasks.map(task => {
+            const lastDone = data[task.id];
+            let timeText = "Henüz yapılmadı";
+            
+            if (lastDone) {
+                const diffMs = now - lastDone;
+                const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+                const diffHours = Math.floor((diffMs / (1000 * 60 * 60)) % 24);
+                
+                if (diffDays === 0) {
+                    timeText = `Bugün yapıldı (${diffHours} saat önce)`;
+                } else {
+                    timeText = `${diffDays} gün önce yapıldı`;
+                }
+            }
+
+            return `
+                <div class="task-card">
+                    <div class="task-info">
+                        <span class="category-tag">${task.cat}</span>
+                        <h3>${task.name}</h3>
+                        <p>Son durum: <span class="timer">${timeText}</span></p>
+                    </div>
+                    <button onclick="markDone('${task.id}')">Tamamladım</button>
+                </div>
+            `;
+        }).join('');
+    }
+
+    // Görevi yapıldı olarak işaretle
+    window.markDone = function(id) {
+        const data = getTaskData();
+        data[id] = new Date().getTime();
+        localStorage.setItem('clean_app_data', JSON.stringify(data));
+        render();
+    };
+
+    // İlk çalıştırma
+    render();
+    // Her dakikada bir süreyi güncelle
+    setInterval(render, 60000);
+</script>
+
+</body>
+</html>
